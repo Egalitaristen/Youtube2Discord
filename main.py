@@ -2,10 +2,9 @@ import os
 import requests
 import feedparser
 import json
-import time
+import sys
 
 DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK_URL']
-CHECK_INTERVAL = 3600  # Check every hour
 POSTED_VIDEOS_FILE = 'posted_videos.json'
 
 def load_channels():
@@ -50,6 +49,8 @@ def main():
                 posted_videos[channel_id] = posted_videos[channel_id][-5:]  # Keep last 5 video IDs
     
     save_posted_videos(posted_videos)
+    print("Script execution completed successfully.")
+    sys.exit(0)  # Explicitly exit with success status
 
 if __name__ == "__main__":
     main()
