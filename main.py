@@ -3,12 +3,14 @@ import requests
 import feedparser
 import json
 import sys
+from datetime import datetime, timedelta
 
 DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK_URL']
 POSTED_VIDEOS_FILE = 'posted_videos.json'
+CHANNELS_FILE = 'channels.json'
 
 def load_channels():
-    with open('channels.json', 'r') as f:
+    with open(CHANNELS_FILE, 'r') as f:
         return json.load(f)
 
 def load_posted_videos():
@@ -42,11 +44,18 @@ def main():
         latest_video = get_latest_video(channel_id)
         if latest_video:
             video_id = latest_video.yt_videoid
-            if channel_id not in posted_videos or video_id not in posted_videos[channel_id]:
-                video_url = f"https://www.youtube.com/watch?v={video_id}"
-                send_to_discord(video_url)
-                posted_videos.setdefault(channel_id, []).append(video_id)
-                posted_videos[channel_id] = posted_videos[channel_id][-5:]  # Keep last 5 video IDs
+            video_date = datetime.strptime(latest_video.published, "%Y-%m-%dT%H:%M:%S%z")
+            
+            # Check if this is a new channel or if the latest video is new
+            is_new_channel = channel_id not in posted_videos
+            is_recent_video = video_date > datetime.now(video_date.tzinfo) - timedelta(days=1)
+            
+            if is_new_channel or is_recent_video:
+                if channel_id not in posted_videos or video_id not in posted_videos[channel_id]:
+                    video_url = f"https://www.youtube.com/watch?v={video_id}"
+                    send_to_discord(video_url)
+                    posted_videos.setdefault(channel_id, []).append(video_id)
+                    posted_videos[channel_id] = posted_videos[channel_id][-5:]  # Keep last 5 video IDs
     
     save_posted_videos(posted_videos)
     print("Script execution completed successfully.")
