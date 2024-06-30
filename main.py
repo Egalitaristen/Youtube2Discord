@@ -1,15 +1,26 @@
 import os
 import requests
 import feedparser
-import time
 import json
+import time
 
 DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK_URL']
 CHECK_INTERVAL = 3600  # Check every hour
+POSTED_VIDEOS_FILE = 'posted_videos.json'
 
 def load_channels():
     with open('channels.json', 'r') as f:
         return json.load(f)
+
+def load_posted_videos():
+    if os.path.exists(POSTED_VIDEOS_FILE):
+        with open(POSTED_VIDEOS_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_posted_videos(posted_videos):
+    with open(POSTED_VIDEOS_FILE, 'w') as f:
+        json.dump(posted_videos, f)
 
 def get_latest_video(channel_id):
     feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
@@ -26,19 +37,19 @@ def send_to_discord(video_url):
 
 def main():
     channels = load_channels()
-    last_video_ids = {channel: [] for channel in channels}
+    posted_videos = load_posted_videos()
     
-    while True:
-        for channel_id in channels:
-            latest_video = get_latest_video(channel_id)
-            if latest_video:
-                video_id = latest_video.yt_videoid
-                if video_id not in last_video_ids[channel_id]:
-                    video_url = f"https://www.youtube.com/watch?v={video_id}"
-                    send_to_discord(video_url)
-                    last_video_ids[channel_id].append(video_id)
-                    last_video_ids[channel_id] = last_video_ids[channel_id][-5:]  # Keep last 5 video IDs
-        time.sleep(CHECK_INTERVAL)
+    for channel_id in channels:
+        latest_video = get_latest_video(channel_id)
+        if latest_video:
+            video_id = latest_video.yt_videoid
+            if channel_id not in posted_videos or video_id not in posted_videos[channel_id]:
+                video_url = f"https://www.youtube.com/watch?v={video_id}"
+                send_to_discord(video_url)
+                posted_videos.setdefault(channel_id, []).append(video_id)
+                posted_videos[channel_id] = posted_videos[channel_id][-5:]  # Keep last 5 video IDs
+    
+    save_posted_videos(posted_videos)
 
 if __name__ == "__main__":
     main()
