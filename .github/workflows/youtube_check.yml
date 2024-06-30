@@ -8,9 +8,9 @@ jobs:
   check-youtube:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3  # Updated to v3
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4  # Updated to v4
       with:
         python-version: '3.x'
     - name: Install dependencies
@@ -21,3 +21,8 @@ jobs:
       env:
         DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       run: python main.py
+    - name: Display script output
+      if: always()
+      run: |
+        echo "Script Output:"
+        cat script_output.txt
