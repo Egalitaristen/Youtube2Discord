@@ -1,6 +1,3 @@
-# Youtube2Discord
-
-
 # YouTube to Discord Bot
 
 This bot automatically checks specified YouTube channels for new videos and posts the video URLs to a Discord channel using a webhook.
@@ -11,7 +8,20 @@ This bot automatically checks specified YouTube channels for new videos and post
 - Sends new video URLs to a Discord channel via webhook
 - Runs automatically every hour using GitHub Actions
 - Avoids duplicate postings by tracking recent video IDs
-- Easy to set up and customize
+
+## Important: GitHub Actions Permissions
+
+**The script will fail without proper permissions set for GitHub Actions.**
+
+To set the correct permissions:
+
+1. Go to your GitHub repository's settings.
+2. Click on "Actions" in the left sidebar.
+3. Scroll down to the "Workflow permissions" section.
+4. Select "Read and write permissions".
+5. Save the changes.
+
+These permissions are necessary for the GitHub Action to update the `posted_videos.json` file in your repository.
 
 ## Setup
 
@@ -51,26 +61,24 @@ This bot automatically checks specified YouTube channels for new videos and post
    git push
    ```
 
-7. The GitHub Action should now be set up and will run automatically every hour. You can also manually trigger it from the Actions tab in your GitHub repository.
+7. Set the correct GitHub Actions permissions as described in the "Important" section above.
+
+8. The GitHub Action should now be set up and will run automatically every hour. You can also manually trigger it from the Actions tab in your GitHub repository.
 
 ## How It Works
 
 - The bot checks the specified YouTube channels every hour for new videos.
-- When a new video is found, it posts only the video URL to the Discord channel using the webhook.
-- The bot keeps track of the last 5 video IDs for each channel to avoid reposting the same videos.
-
-## Customization
-
-- To change how often the bot checks for new videos, edit the cron schedule in `.github/workflows/youtube_check.yml`.
-- To modify the check interval within the script, edit the `CHECK_INTERVAL` variable in `main.py`.
+- When a new video (less than 24 hours old) is found, it posts the video URL to the Discord channel using the webhook.
+- The bot keeps track of posted videos to avoid reposting the same videos.
 
 ## Troubleshooting
 
 If you encounter any issues:
-1. Check the Actions tab in your GitHub repository for any error messages.
+
+1. Check the GitHub Actions logs for any error messages.
 2. Ensure your `DISCORD_WEBHOOK_URL` secret is set correctly.
 3. Verify that the YouTube channel IDs in `channels.json` are correct.
-4. Make sure the webhook has the necessary permissions in your Discord server.
+4. Double-check that you've set the correct permissions for GitHub Actions as described in the "Important" section.
 
 ## Contributing
 
