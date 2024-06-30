@@ -16,22 +16,28 @@ def get_latest_video(channel_id):
     feed = feedparser.parse(feed_url)
     return feed.entries[0] if feed.entries else None
 
-def send_to_discord(video):
+def send_to_discord(video_url):
     data = {
-        "content": f"New video: {video.title}\n{video.link}"
+        "content": video_url
     }
-    requests.post(DISCORD_WEBHOOK_URL, json=data)
+    response = requests.post(DISCORD_WEBHOOK_URL, json=data)
+    if response.status_code != 204:
+        print(f"Failed to send message. Status code: {response.status_code}")
 
 def main():
     channels = load_channels()
-    last_video_ids = {channel: None for channel in channels}
+    last_video_ids = {channel: [] for channel in channels}
     
     while True:
         for channel_id in channels:
             latest_video = get_latest_video(channel_id)
-            if latest_video and latest_video.id != last_video_ids[channel_id]:
-                send_to_discord(latest_video)
-                last_video_ids[channel_id] = latest_video.id
+            if latest_video:
+                video_id = latest_video.yt_videoid
+                if video_id not in last_video_ids[channel_id]:
+                    video_url = f"https://www.youtube.com/watch?v={video_id}"
+                    send_to_discord(video_url)
+                    last_video_ids[channel_id].append(video_id)
+                    last_video_ids[channel_id] = last_video_ids[channel_id][-5:]  # Keep last 5 video IDs
         time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
